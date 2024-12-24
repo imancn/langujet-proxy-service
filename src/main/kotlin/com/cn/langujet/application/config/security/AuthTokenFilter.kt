@@ -13,10 +13,18 @@ import java.io.IOException
 class AuthTokenFilter(
     private val modelMapper: ObjectMapper, private val langujetProxyClientSecret: String
 ) : OncePerRequestFilter() {
+    
+    val whiteList = listOf(
+        "/api/v1/stripe/checkout/session/webhook"
+    )
+    
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
         request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain
     ) {
+        if (whiteList.contains(request.requestURI)) {
+            filterChain.doFilter(request, response)
+        }
         if (request.getHeader(HttpHeaders.AUTHORIZATION) != langujetProxyClientSecret && request.requestURI.startsWith("/api")) {
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = "application/json"
